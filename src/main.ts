@@ -12,7 +12,7 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
     console.log('Request ', req.url, req.method)
 
     const url = new URL(req.url, 'http://localhost:11337/')
-    
+
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
@@ -22,16 +22,16 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
         //res.writeHead(200, { 'Access-Control-Allow-Origin': '*' });
         res.end();
         return;
-      }
+    }
 
     console.log('Action ', url.pathname)
     if (req.method == 'GET') {
-        res.writeHead(200, { 'Content-Type': 'application/json'});
-        res.write(JSON.stringify({error: 'request ' + url.pathname + ' method not allowed ' + req.method}));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.write(JSON.stringify({ error: 'request ' + url.pathname + ' method not allowed ' + req.method }));
         res.end();
         return
     }
-    
+
     switch (url.pathname) {
         case '/preview/link':
             if (req.method == 'POST') {
@@ -42,55 +42,37 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
                 })
 
                 req.on('end', function () {
+                    console.debug('Body is ', body)
                     const json = JSON.parse(body)
                     if (json && json.url) {
-                        new Promise((resolve, reject) => {
-                            setTimeout(() => reject('Timeout'), 5000)
-                            return getLinkPreview(json.url)
-                        }).then((data) => {
-                            console.debug(data);
-                            res.writeHead(200, { 'Content-Type': 'application/json'});
+                        console.debug('Url to preview is ', json.url)
 
+                        getLinkPreview(json.url)
+                        .then((data) => {
+                            console.debug('Data for the preview: ', data);
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
                             res.write(JSON.stringify(data));
                             res.end();
-                        }).catch((error) => {
-                            res.writeHead(200, { 'Content-Type': 'application/json'});
-                            res.write(JSON.stringify({'msg': error}));
+                        })
+                        .catch((error) => {
+                            console.error('We have an error: ', error)
+                            res.writeHead(200, { 'Content-Type': 'application/json' });
+                            res.write(JSON.stringify({ 'msg': error }));
                             res.end();
                         });
 
                     } else {
-                        res.writeHead(200, { 'Content-Type': 'application/json'});
+                        res.writeHead(200, { 'Content-Type': 'application/json' });
                         res.write(JSON.stringify({ msg: 'No url in request' }));
                         res.end();
                     }
                 });
             }
-            if (req.method == 'GET') {
-                getLinkPreview("https://www.youtube.com/watch?v=MejbOFk7H6c").then((data) => {
-                    console.debug(data);
-                    res.writeHead(200, { 'Content-Type': 'application/json'});
-                    res.write(JSON.stringify(data));
-                    res.end();
-                });
-            }
             break;
         default:
-            res.writeHead(200, { 'Content-Type': 'application/json'});
-            res.write(JSON.stringify({error: 'request ' + url.pathname + ' unknown'}));
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.write(JSON.stringify({ error: 'request ' + url.pathname + ' unknown' }));
             res.end();
             return
     }
 });
-
-/*
-server.on('data', (req, res, head) => {
-    // pass the link directly
-    getLinkPreview("https://www.youtube.com/watch?v=MejbOFk7H6c").then((data) => {
-        console.debug(data);
-        res.writeHead(200, { 'Content-Type': 'text/plain' });
-        res.write('Hello World!');
-        res.end();
-    });
-});
-*/

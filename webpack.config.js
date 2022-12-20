@@ -5,6 +5,9 @@ module.exports = {
     mode: 'production',
     entry: './src/main.ts',
     target: 'node',
+    optimization: {
+        minimize: false
+    },
     output: {
         path: path.resolve(__dirname, 'dist'),
         filename: 'main.js',
