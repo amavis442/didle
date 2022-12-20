@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "outDir": "dist",
+        "target": "ESNext",
+        "useDefineForClassFields": true,
+        "moduleResolution": "node",
+        "module": "CommonJS",
+        "resolveJsonModule": true,
+        "allowJs": true,
+        "checkJs": true,
+        "isolatedModules": true,
+        "lib": [
+            "ESNext",
+            "scripthost"
+        ],
+        "newLine": "LF"
+    },
+    "include": [
+        "src/**/*.d.ts",
+        "src/**/*.ts",
+        "src/**/*.js"
+    ],
+}
