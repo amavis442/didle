@@ -9,12 +9,12 @@ const server = http.createServer();
 server.listen(11337, '127.0.0.1');
 
 server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
-    console.log('Wat krijgen we binnen ', req.url, req.method)
+    console.log('Request ', req.url, req.method)
 
     const url = new URL(req.url, 'http://localhost:11337/')
     
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'POST, GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
 
     // Stupid CORS preflight request
@@ -24,8 +24,14 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
         return;
       }
 
-    console.log('Welke actie moeten we doen ', url.pathname)
-
+    console.log('Action ', url.pathname)
+    if (req.method == 'GET') {
+        res.writeHead(200, { 'Content-Type': 'application/json'});
+        res.write(JSON.stringify({error: 'request ' + url.pathname + ' method not allowed ' + req.method}));
+        res.end();
+        return
+    }
+    
     switch (url.pathname) {
         case '/preview/link':
             if (req.method == 'POST') {
@@ -38,13 +44,21 @@ server.on('request', (req: http.IncomingMessage, res: http.ServerResponse) => {
                 req.on('end', function () {
                     const json = JSON.parse(body)
                     if (json && json.url) {
-                        getLinkPreview(json.url).then((data) => {
+                        new Promise((resolve, reject) => {
+                            setTimeout(() => reject('Timeout'), 5000)
+                            return getLinkPreview(json.url)
+                        }).then((data) => {
                             console.debug(data);
                             res.writeHead(200, { 'Content-Type': 'application/json'});
 
                             res.write(JSON.stringify(data));
                             res.end();
+                        }).catch((error) => {
+                            res.writeHead(200, { 'Content-Type': 'application/json'});
+                            res.write(JSON.stringify({'msg': error}));
+                            res.end();
                         });
+
                     } else {
                         res.writeHead(200, { 'Content-Type': 'application/json'});
                         res.write(JSON.stringify({ msg: 'No url in request' }));
